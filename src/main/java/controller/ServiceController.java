@@ -8,11 +8,14 @@ import org.jetbrains.annotations.NotNull;
 import javax.swing.*;
 import java.util.List;
 
+import static utility.ConstantStings.*;
+
+
+/**
+ * Service Controller class that manipulates the model and updates the view.
+ */
 public class ServiceController implements ServiceControllerContract {
 
-    private static final String ROOM_SUMMARY = "Room Summary :\n";
-    private static final String ROOM = "Room ";
-    private static final String GUEST_LIST = "Guest List :\n";
     private final HotelForm form;
     private final List<HotelRoom> rooms;
 
@@ -21,117 +24,161 @@ public class ServiceController implements ServiceControllerContract {
         this.rooms = rooms;
     }
 
+    /**
+     * Initializes the view or swing GUI form of the application.
+     */
+    @Override
     public void initForm() {
         form.setContentPane(form.getJFormHotel());
-        form.setBounds(100, 200, 830, 400);
+        form.setBounds(100, 200, 600, 450);
         form.setVisible(true);
-//        form.setResizable(false);
+        form.getSpinnerRoomNumber().setModel(new SpinnerNumberModel(1, 1, rooms.size(), 1));
+        ((JSpinner.DefaultEditor) form.getSpinnerRoomNumber().getEditor()).getTextField().setEditable(false);
+        form.getLabelNumberOfRooms().setText("" + rooms.size());
     }
 
+    /**
+     * Initializes the ServiceController object of the application and assigns functions to the button click listeners.
+     */
+    @Override
     public void initServiceController() {
-        form.getBtnRegisterGuest().addActionListener(e -> addGuestAction(form.getTxtGuestName(), form.getTxtGuestSurname(), form.getBtnRegisterGuest()));
-        form.getBtnRoom1CheckOut().addActionListener(e -> checkOutAction(form.getBtnRoom1CheckOut(), rooms.get(0)));
-        form.getBtnRoom2CheckOut().addActionListener(e -> checkOutAction(form.getBtnRoom2CheckOut(), rooms.get(1)));
-        form.getBtnRoom3CheckOut().addActionListener(e -> checkOutAction(form.getBtnRoom3CheckOut(), rooms.get(2)));
-        form.getBtnRoom4CheckOut().addActionListener(e -> checkOutAction(form.getBtnRoom4CheckOut(), rooms.get(3)));
-        form.getBtnRoom5CheckOut().addActionListener(e -> checkOutAction(form.getBtnRoom5CheckOut(), rooms.get(4)));
-        form.getBtnRoom1GuestHistory().addActionListener(e -> checkGuestHistoryAction(form.getBtnRoom1GuestHistory(), rooms.get(0)));
-        form.getBtnRoom2GuestHistory().addActionListener(e -> checkGuestHistoryAction(form.getBtnRoom2GuestHistory(), rooms.get(1)));
-        form.getBtnRoom3GuestHistory().addActionListener(e -> checkGuestHistoryAction(form.getBtnRoom3GuestHistory(), rooms.get(2)));
-        form.getBtnRoom4GuestHistory().addActionListener(e -> checkGuestHistoryAction(form.getBtnRoom4GuestHistory(), rooms.get(3)));
-        form.getBtnRoom5GuestHistory().addActionListener(e -> checkGuestHistoryAction(form.getBtnRoom5GuestHistory(), rooms.get(4)));
-        form.getBtnRoom1History().addActionListener(e -> checkRoomSummaryAction(form.getBtnRoom1History(), rooms.get(0)));
-        form.getBtnRoom2History().addActionListener(e -> checkRoomSummaryAction(form.getBtnRoom2History(), rooms.get(1)));
-        form.getBtnRoom3History().addActionListener(e -> checkRoomSummaryAction(form.getBtnRoom3History(), rooms.get(2)));
-        form.getBtnRoom4History().addActionListener(e -> checkRoomSummaryAction(form.getBtnRoom4History(), rooms.get(3)));
-        form.getBtnRoom5History().addActionListener(e -> checkRoomSummaryAction(form.getBtnRoom5History(), rooms.get(4)));
-        form.getBtnRoom1Review().addActionListener(e -> reviewRoomAction(form.getBtnRoom1Review(), rooms.get(0)));
-        form.getBtnRoom2Review().addActionListener(e -> reviewRoomAction(form.getBtnRoom2Review(), rooms.get(1)));
-        form.getBtnRoom3Review().addActionListener(e -> reviewRoomAction(form.getBtnRoom3Review(), rooms.get(2)));
-        form.getBtnRoom4Review().addActionListener(e -> reviewRoomAction(form.getBtnRoom4Review(), rooms.get(3)));
-        form.getBtnRoom5Review().addActionListener(e -> reviewRoomAction(form.getBtnRoom5Review(), rooms.get(4)));
-        form.getBtnSummary().addActionListener(e -> checkHotelSummaryAction(form.getBtnSummary()));
-        form.getBtnRoomOccupancyReview().addActionListener(e -> reviewAllRoomsAction(form.getBtnRoomOccupancyReview()));
+        form.getBtnRegisterGuest().addActionListener(e -> addGuestAction(form.getTxtGuestName(), form.getTxtGuestSurname()));
+        form.getBtnSummary().addActionListener(e -> checkHotelSummaryAction());
+        form.getBtnRoomOccupancyReview().addActionListener(e -> reviewAllRoomsAction());
+        form.getBtnAddRoom().addActionListener(e -> addRoom());
+        form.getBtnRoomCheckOut().addActionListener(e -> checkOutAction((Integer) form.getSpinnerRoomNumber().getValue() - 1));
+        form.getBtnRoomGuestHistory().addActionListener(e -> checkGuestHistoryAction((Integer) form.getSpinnerRoomNumber().getValue() - 1));
+        form.getBtnRoomHistory().addActionListener(e -> checkRoomSummaryAction((Integer) form.getSpinnerRoomNumber().getValue() - 1));
+        form.getBtnRoomReview().addActionListener(e -> reviewRoomAction((Integer) form.getSpinnerRoomNumber().getValue() - 1));
     }
 
+    /**
+     * Function to check guest out of room when Check Out button is clicked.
+     *
+     * @param roomNumber Room number of the room action is being performed for.
+     */
     @Override
-    public void checkOutAction(JButton button, @NotNull HotelRoom room) {
-        if (room.isOccupied()) {
-            JOptionPane.showMessageDialog(button, room.getCurrentGuestName() + " " + room.getCurrentGuestSurname() + " was checked out of room.");
-            room.checkOut();
+    public void checkOutAction(int roomNumber) {
+        if (rooms.get(roomNumber).isOccupied()) {
+            form.getTxtAreaPrinting().setText(ROOM + (roomNumber + 1) + ":" + rooms.get(roomNumber).getCurrentGuestName() + CHECKED_OUT);
+            rooms.get(roomNumber).checkOut();
         } else {
-            JOptionPane.showMessageDialog(button, "Room is already empty. No guest to check out.");
+            form.getTxtAreaPrinting().setText(ROOM + (roomNumber + 1) + NOT_CHECKED_OUT);
         }
     }
 
+    /**
+     * Function to check history of guests who have previously occupied the room.
+     *
+     * @param roomNumber Room number of the room action is being performed for.
+     */
     @Override
-    public void checkGuestHistoryAction(JButton button, @NotNull HotelRoom room) {
-        if (room.getHistory().isEmpty()) {
-            JOptionPane.showMessageDialog(button, "No guests to show. Room has not been occupied.");
+    public void checkGuestHistoryAction(int roomNumber) {
+        if (rooms.get(roomNumber).getHistory().isEmpty()) {
+            form.getTxtAreaPrinting().setText(NO_GUESTS_TO_SHOW + ROOM + (roomNumber + 1) + NOT_OCCUPIED);
         } else {
-            JOptionPane.showMessageDialog(button, GUEST_LIST + buildGuestList(room));
+            form.getTxtAreaPrinting().setText(GUEST_LIST + buildGuestList(rooms.get(roomNumber)));
         }
     }
 
+    /**
+     * Function to print Summary of entire hotel which includes guest lists and activities of each room in the Scrollable text area.
+     */
     @Override
-    public void checkHotelSummaryAction(JButton button) {
+    public void checkHotelSummaryAction() {
         StringBuilder builder = new StringBuilder();
+        builder.append(HOTEL_SUMMARY);
         int i = 0;
         for (HotelRoom room : rooms) {
             if (room.getHistory().isEmpty()) {
-                builder.append(ROOM).append(++i).append("\n").append(ROOM_SUMMARY).append(buildRoomSummary(room))
-                        .append(GUEST_LIST + " No Guests to show.");
+                builder.append(ROOM).append(++i).append(ROOM_SUMMARY).append(buildRoomSummary(room))
+                        .append(GUEST_LIST + NO_GUESTS_TO_SHOW);
             } else {
-                builder.append(ROOM).append(++i).append("\n").append(ROOM_SUMMARY).append(buildRoomSummary(room))
+                builder.append(ROOM).append(++i).append(ROOM_SUMMARY).append(buildRoomSummary(room))
                         .append(GUEST_LIST).append(buildGuestList(room));
             }
         }
-        JOptionPane.showMessageDialog(button, builder);
+        form.getTxtAreaPrinting().setText(builder.toString());
     }
 
+    /**
+     * Function to print summary of guests and activity of the room in the scrollable text area.
+     *
+     * @param roomNumber Room number of the room action is being performed for.
+     */
     @Override
-    public void checkRoomSummaryAction(JButton button, @NotNull HotelRoom room) {
-        JOptionPane.showMessageDialog(button, ROOM_SUMMARY + buildRoomSummary(room));
+    public void checkRoomSummaryAction(int roomNumber) {
+        form.getTxtAreaPrinting().setText(ROOM + (roomNumber + 1) + ROOM_SUMMARY + buildRoomSummary(rooms.get(roomNumber)));
     }
 
+    /**
+     * Function to assign guest to a room.
+     *
+     * @param guestName    First Name of guest.
+     * @param guestSurname Surname of guest.
+     */
     @Override
-    public void addGuestAction(JTextField guestName, JTextField guestSurname, JButton button) {
+    public void addGuestAction(JTextField guestName, JTextField guestSurname) {
         int counter = 0;
         if (guestName.getText().trim().equals("") || guestSurname.getText().trim().equals("")) {
-            JOptionPane.showMessageDialog(button, "Name or Surname of guest cannot be empty");
+            form.getTxtAreaPrinting().setText(EMPTY_NAME_SURNAME);
         } else {
             for (HotelRoom room : rooms) {
                 if (!room.isOccupied()) {
                     room.assignGuest(guestName.getText().trim(), guestSurname.getText().trim());
-                    JOptionPane.showMessageDialog(button, guestName.getText().trim() + " " + guestSurname.getText().trim()
-                            + " was assigned to room " + ++counter);
+                    form.getTxtAreaPrinting().setText(guestName.getText().trim() + " " + guestSurname.getText().trim()
+                            + WAS_ASSIGNED_TO + ++counter);
                     guestName.setText("");
                     guestSurname.setText("");
                     break;
                 } else {
                     if (++counter == 5) {
-                        JOptionPane.showMessageDialog(button, "Unfortunately all rooms are occupied at this moment. Please try again later.");
+                        form.getTxtAreaPrinting().setText(ALL_ROOMS_OCCUPIED);
                     }
                 }
             }
         }
     }
 
+    /**
+     * Function to review status and current guest occupant if any of the room.
+     *
+     * @param roomNumber Room number of the room action is being performed for.
+     */
     @Override
-    public void reviewRoomAction(JButton button, @NotNull HotelRoom room) {
-        JOptionPane.showMessageDialog(button, buildRoomReview(room));
+    public void reviewRoomAction(int roomNumber) {
+        form.getTxtAreaPrinting().setText(ROOM + (roomNumber + 1) + buildRoomReview(rooms.get(roomNumber)));
     }
 
+    /**
+     * Function to print the review of Room Occupancy for entire hotel in the scrollable text area.
+     */
     @Override
-    public void reviewAllRoomsAction(JButton button) {
+    public void reviewAllRoomsAction() {
         StringBuilder builder = new StringBuilder();
         int i = 0;
         for (HotelRoom room : rooms) {
-            builder.append(ROOM).append(++i).append("\n").append(buildRoomReview(room));
+            builder.append(ROOM).append(++i).append(buildRoomReview(room));
         }
-        JOptionPane.showMessageDialog(button, builder);
+        form.getTxtAreaPrinting().setText(builder.toString());
     }
 
+    /**
+     * Function to add a room to the hotel.
+     */
+    @Override
+    public void addRoom() {
+        rooms.add(new HotelRoom());
+        form.getSpinnerRoomNumber().setModel(new SpinnerNumberModel(1, 1, rooms.size(), 1));
+        form.getLabelNumberOfRooms().setText("" + rooms.size());
+    }
+
+    /**
+     * Function to generate review of a room i.e. status and current guest occupant if any of the room.
+     *
+     * @param room Room of the hotel for which the review is being generated.
+     * @return String value of the review generated.
+     */
     @Override
     public String buildGuestList(@NotNull HotelRoom room) {
         StringBuilder builder = new StringBuilder();
@@ -141,28 +188,38 @@ public class ServiceController implements ServiceControllerContract {
         return builder.toString();
     }
 
+    /**
+     * Function to generate guest list of a room.
+     *
+     * @param room Room of the hotel for which the review is being generated.
+     * @return String value of the guest list generated.
+     */
     @Override
     public String buildRoomReview(@NotNull HotelRoom room) {
         if (room.isOccupied()) {
-            return "Room is occupied.\n" +
-                    "Guest :" + room.getCurrentGuestName() + " " + room.getCurrentGuestSurname() + "\n";
+            return OCCUPIED + GUEST + room.getCurrentGuestName();
         } else {
-            return "Room is available.\n";
+            return AVAILABLE;
         }
     }
 
+    /**
+     * Function to generate summary of a room i.e. status and current guest occupant if any and activity of the room.
+     *
+     * @param room Room of the hotel for which the review is being generated.
+     * @return String value of the room summary generated.
+     */
     @Override
     public String buildRoomSummary(@NotNull HotelRoom room) {
         if (room.getHistory().isEmpty()) {
-            return "No activity to show. Room has not been occupied yet.\n";
+            return NO_ACTIVITY;
         } else {
             StringBuilder builder = new StringBuilder();
             for (int i = 0; i < room.getHistory().size(); i++) {
                 if (i == room.getHistory().size() - 1 && room.isOccupied()) {
-                    builder.append(room.getHistory().get(i)).append(" is occupying the room\n");
+                    builder.append(room.getHistory().get(i)).append(CHECKED_IN).append(room.getHistory().get(i)).append(IS_OCCUPYING);
                 } else {
-                    builder.append(room.getHistory().get(i)).append(" checked in\n");
-                    builder.append(room.getHistory().get(i)).append(" checked out\n");
+                    builder.append(room.getHistory().get(i)).append(CHECKED_IN).append(room.getHistory().get(i)).append(CHECKED_OUT);
                 }
             }
             return builder.toString();

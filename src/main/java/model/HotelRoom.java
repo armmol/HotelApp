@@ -6,48 +6,63 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HotelRoom implements HotelRoomContact {
-    private List<String> history;
-    private String currentGuestName;
-    private String currentGuestSurname;
+    private final List<String> history;
     private boolean occupied;
 
+    /**
+     * Constructor for HotelRoom class.
+     */
     public HotelRoom() {
         history = new ArrayList<>();
-        currentGuestName = "";
-        currentGuestSurname = "";
         occupied = false;
     }
 
+    /**
+     * Function to assign guest to a room.
+     *
+     * @param guestName    First Name of guest.
+     * @param guestSurname Surname of guest.
+     */
     @Override
     public void assignGuest(String guestName, String guestSurname) {
-        currentGuestName = guestName;
-        currentGuestSurname = guestSurname;
         occupied = true;
         history.add(String.format("%s %s", guestName, guestSurname));
     }
 
+    /**
+     * Function to check guest out of room.
+     */
     @Override
     public void checkOut() {
-        currentGuestName = "";
-        currentGuestSurname = "";
         occupied = false;
     }
 
+    /**
+     * Function to get the History of Array of room that contains names and surnames of guests who have occupied/are occupying the room.
+     *
+     * @return history of guests who have occupied/are occupying room.
+     */
     @Override
     public List<String> getHistory() {
         return history;
     }
 
+    /**
+     * Function to return name and surname of guest currently occupying the room.
+     *
+     * @return Name of guest currently occupying the room.
+     */
     @Override
     public String getCurrentGuestName() {
-        return currentGuestName;
+        return history.get(history.size() - 1);
     }
 
-    @Override
-    public String getCurrentGuestSurname() {
-        return currentGuestSurname;
-    }
 
+    /**
+     * Function to return a boolean value to check if a room is available or occupied.
+     *
+     * @return room status about being occupied or available.
+     */
     @Override
     public boolean isOccupied() {
         return occupied;
