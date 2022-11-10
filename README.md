@@ -23,4 +23,4 @@ driver - Containts Driver class HotelApp.java with main method to run the app.
 
 Test classes - JUnit5
 
-Tests for model control function i.e functions that manipulate the model of the app.
+Tests for model control functions i.e functions that manipulate the model of the app.
