@@ -8,6 +8,7 @@ Architechture - MVC
 GUI - Swing
 
 Contains a 6 package structure including the following packages : 
+
 model - Model of the app containing HotelRoom.java.
 
 form - View of the app containing the Swing GUI.
